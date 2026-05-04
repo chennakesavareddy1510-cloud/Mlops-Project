@@ -13,9 +13,18 @@ def train():
     # Load config
     config = load_config()
 
-    # Set MLflow tracking URI from .env
-    mlflow.set_tracking_uri(get_env_variable("MLFLOW_TRACKING_URI"))
-    mlflow.set_experiment("mlops_experiment")
+    mlflow_uri = get_env_variable("MLFLOW_TRACKING_URI")
+
+    if mlflow_uri:
+        try:
+            mlflow.set_tracking_uri(mlflow_uri)
+            mlflow.set_experiment("mlops_experiment")
+            mlflow_enabled = True
+        except Exception as e:
+            print("MLflow not available, running without tracking")
+            mlflow_enabled = False
+    else:
+        mlflow_enabled = False
 
     # Load data
     df = load_data()
@@ -31,7 +40,8 @@ def train():
     )
 
     # Start MLflow run
-    with mlflow.start_run():
+    if mlflow_enabled:
+        mlflow.start_run()
 
         model = RandomForestClassifier(
             n_estimators=config["model"]["n_estimators"]
@@ -52,6 +62,7 @@ def train():
         mlflow.log_artifact("model.pkl")
 
         print(f"Accuracy: {accuracy}")
+        mlflow.end_run()
 
 
 if __name__ == "__main__":
