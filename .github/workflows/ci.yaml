@@ -23,4 +23,5 @@ jobs:
 
     - name: Run training
       run: |
+        export PYTHONPATH=$PYTHONPATH:.
         python src/models/train.py
